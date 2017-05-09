@@ -8,9 +8,9 @@ using System.Threading.Tasks;
 
 namespace EventWorkerExample
 {
-    public class NewSomethingChecker : CheckerBase
+    public class ResetTestDataChecker : CheckerBase
     {
-       
+
 
         public override bool IsRunning
         {
@@ -30,7 +30,7 @@ namespace EventWorkerExample
 
         public override int CheckInterval
         {
-            get { return 5000; }
+            get { return 35000; }
         }
 
 
@@ -58,14 +58,30 @@ namespace EventWorkerExample
 
         private void Check()
         {
-            Console.WriteLine("Checking for new something...");
+            Console.WriteLine("Checking for to see if all TestData has been completed...");
 
-            //DO Some sort of work here; just writing a random number to console
-            Random rnd = new Random();
-            Console.WriteLine(string.Format("{0} - {1}", this.LogObjectName, rnd.Next(1, 100)));
+            
+            var query = TestTransactionData.Instance.Data.Where(x => x.IsProcessed == false).Count();
 
-        }      
-        
+            if(query == 0) {
+                //reset all data
+
+                TestTransactionData.Instance.Data.ForEach(x => {
+                    x.IsProcessed = false;
+                    Console.WriteLine(string.Format("{0} - {1} set to unprocessed.", this.LogObjectName, x.ID));
+                });
+                Console.WriteLine("All data reset to unprocessed.");
+
+            } else {
+                Console.WriteLine("All TestData not yet processed.");
+            }
+
+          
+            
+
+
+        }
+
 
     }
 }

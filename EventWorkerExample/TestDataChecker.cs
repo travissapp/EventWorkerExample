@@ -5,12 +5,13 @@ using System.Linq;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
+using EventWorkerExample.Infrastructure;
 
 namespace EventWorkerExample
 {
-    public class NewSomethingElseChecker : CheckerBase
+    public class TestDataChecker : CheckerBase
     {
-
+       
 
         public override bool IsRunning
         {
@@ -30,7 +31,7 @@ namespace EventWorkerExample
 
         public override int CheckInterval
         {
-            get { return 2000; }
+            get { return 1000; }
         }
 
 
@@ -58,15 +59,26 @@ namespace EventWorkerExample
 
         private void Check()
         {
-            Console.WriteLine("Checking for new something ELSE...");
+            Console.WriteLine("Checking for test data...");
 
-            //Do Some sort of work here; just writing a random number to console
-            Random rnd = new Random();
-            Console.WriteLine(string.Format("{0} - {1}", this.LogObjectName, rnd.Next(1, 50)));
+            //Would query here from some message query; Azure/MSMQ/etc... pull one from mock data
+            var query = TestTransactionData.Instance.Data.Where(x => x.IsProcessed == false).FirstOrDefault();
 
+            if(query!= null) {
 
-        }
+                //DeSerialize XML to obj
+                var trans = EventWorkerExample.Transactions.TestTransaction.CreateInstance(query.Message);
+                //Do work based on the message object type
+                Console.WriteLine(string.Format("{0} - {1}", this.LogObjectName, trans.Message));
+                
+                //set data to processed
+                query.IsProcessed = true;
+            }
 
+            
+
+        }      
+        
 
     }
 }
